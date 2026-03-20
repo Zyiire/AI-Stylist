@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
+import { Footer } from "@/components/Footer";
 import { PublishModal } from "@/components/PublishModal";
 import { ResultsGrid } from "@/components/ResultsGrid";
 import { FilterSidebar } from "@/components/FilterSidebar";
@@ -110,9 +111,9 @@ export default function HomePage() {
 
       {/* Results — after search */}
       {hasSearched && (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-8 pt-28">
           {/* Re-search bar */}
-          <div className="flex gap-3 mb-5 items-center">
+          <div className="flex gap-3 mb-8 items-center">
             <div className="flex-1 max-w-sm">
               <TextSearch onSearch={handleTextSearch} loading={loading} />
             </div>
@@ -121,7 +122,7 @@ export default function HomePage() {
             </div>
             {/* Mobile filter toggle */}
             <button
-              className="lg:hidden flex items-center gap-1.5 text-sm text-[#1B4332] border border-[#1B4332] px-3 py-2 rounded-xl font-medium hover:bg-[#f0fdf4] transition-colors"
+              className="lg:hidden flex items-center gap-1.5 text-sm text-primary border border-outline-variant/40 px-3 py-2 rounded-xl font-medium hover:bg-surface-container-low transition-colors font-body"
               onClick={() => setFiltersOpen(!filtersOpen)}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -131,7 +132,7 @@ export default function HomePage() {
 
           <div className="flex gap-6">
             {/* Sidebar — desktop */}
-            <aside className="hidden lg:block w-52 shrink-0 sticky top-24 self-start">
+            <aside className="hidden lg:block w-52 shrink-0 sticky top-28 self-start">
               <FilterSidebar filters={filters} onChange={setFilters} />
             </aside>
 
@@ -139,7 +140,7 @@ export default function HomePage() {
             {filtersOpen && (
               <div className="lg:hidden fixed inset-0 z-40 flex">
                 <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
-                <div className="relative ml-auto w-72 h-full bg-white p-6 overflow-y-auto shadow-2xl">
+                <div className="relative ml-auto w-72 h-full bg-surface p-6 overflow-y-auto shadow-2xl">
                   <FilterSidebar filters={filters} onChange={setFilters} />
                 </div>
               </div>
@@ -149,7 +150,7 @@ export default function HomePage() {
             <main className="flex-1 min-w-0">
               {/* Meta */}
               {!loading && results.length > 0 && (
-                <p className="text-xs text-gray-400 mb-4 font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/50 mb-6 font-label">
                   {results.length} results
                   {latencyMs != null && ` · ${latencyMs.toFixed(0)}ms`}
                 </p>
@@ -157,7 +158,7 @@ export default function HomePage() {
 
               {/* Error */}
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
+                <div className="text-sm text-error bg-error-container border border-error/20 rounded-xl px-4 py-3 mb-4 font-body">
                   {error}
                 </div>
               )}
@@ -168,6 +169,7 @@ export default function HomePage() {
         </div>
       )}
 
+      <Footer />
       <PublishModal isOpen={publishOpen} onClose={() => setPublishOpen(false)} />
     </>
   );

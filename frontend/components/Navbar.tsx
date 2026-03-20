@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Menu, X, Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface NavbarProps {
   onPublish: () => void;
@@ -10,7 +10,7 @@ interface NavbarProps {
   showSearchBar?: boolean;
 }
 
-const NAV_LINKS = ["Discover", "Trending", "Collections"];
+const NAV_LINKS = ["Discover", "Collections", "Trending"];
 
 export function Navbar({ onPublish, onTextSearch, loading, showSearchBar }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,107 +22,97 @@ export function Navbar({ onPublish, onTextSearch, loading, showSearchBar }: Navb
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0D1F17] border-b border-white/[0.07]">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 h-[60px] flex items-center gap-4">
-
-        {/* Logo */}
-        <a href="/" className="shrink-0">
-          <span className="font-display text-[20px] font-light text-white tracking-[-0.04em] leading-none">
-            Verdant
-          </span>
-        </a>
-
-        {/* Logo / nav separator */}
-        <span className="hidden md:block text-white/20 font-mono text-sm select-none">/</span>
-
-        {/* Desktop nav — monospace, uppercase, "/" separators */}
-        <nav className="hidden md:flex items-center">
-          {NAV_LINKS.map((link, i) => (
-            <div key={link} className="flex items-center">
-              <a
-                href="#"
-                className="font-mono text-[13px] uppercase tracking-[-0.03em] text-white/45 hover:text-white transition-colors duration-150 px-3 py-1"
-              >
-                {link}
-              </a>
-              {i < NAV_LINKS.length - 1 && (
-                <span className="text-white/20 font-mono text-sm select-none">/</span>
-              )}
-            </div>
-          ))}
-        </nav>
-
-        {/* Inline search — shown after first search */}
-        {showSearchBar && (
-          <form onSubmit={submit} className="hidden md:flex items-center flex-1 max-w-[220px] mx-auto relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/25 pointer-events-none" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search…"
-              disabled={loading}
-              className="w-full pl-7 pr-3 py-1.5 bg-white/[0.06] border border-white/[0.09] rounded-[4px] font-mono text-[13px] text-white placeholder:text-white/25 focus:outline-none focus:border-white/25 transition-colors disabled:opacity-50"
-            />
-            {loading && (
-              <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30 animate-spin" />
-            )}
-          </form>
-        )}
-
-        {/* Right side */}
-        <div className="ml-auto flex items-center gap-2">
-          {/* Sign In — muted secondary */}
-          <button className="hidden sm:block font-mono text-[13px] uppercase tracking-[-0.02em] text-white/45 hover:text-white bg-white/[0.05] hover:bg-white/[0.09] px-3.5 py-1.5 rounded-[4px] transition-colors duration-150">
-            Sign In
-          </button>
-
-          <span className="hidden sm:block text-white/20 font-mono text-sm select-none">/</span>
-
-          {/* Publish — translucent green CTA */}
-          <button
-            onClick={onPublish}
-            className="flex items-center gap-1.5 font-mono text-[13px] uppercase tracking-[-0.02em] text-[#74C69D] bg-[#40916C]/20 hover:bg-[#40916C]/35 px-3.5 py-1.5 rounded-[4px] transition-colors duration-150"
-          >
-            <Upload className="w-3 h-3" />
-            Publish
-          </button>
-
-          {/* Mobile toggle */}
-          <button
-            className="md:hidden text-white/45 hover:text-white ml-2 transition-colors"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X className="w-[18px] h-[18px]" /> : <Menu className="w-[18px] h-[18px]" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden bg-[#0A1A10] border-t border-white/[0.07] px-6 py-5 space-y-1">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="block font-mono text-[13px] uppercase tracking-[-0.02em] text-white/45 hover:text-white py-2 transition-colors"
-            >
-              {link}
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
+        <div className="flex items-center justify-between px-6 bg-white/70 glass-nav rounded-xl max-w-7xl mx-auto h-16 shadow-[0_20px_40px_rgba(0,0,0,0.06)]">
+          {/* Left — logo + links */}
+          <div className="flex items-center gap-8">
+            <a href="/" className="shrink-0">
+              <span className="text-xl font-bold tracking-tighter text-primary font-headline">
+                Verdant
+              </span>
             </a>
-          ))}
-          <div className="pt-3 mt-2 border-t border-white/[0.07] flex gap-2">
-            <button className="font-mono text-[13px] uppercase tracking-[-0.02em] text-white/45 bg-white/[0.06] px-3.5 py-1.5 rounded-[4px]">
-              Sign In
-            </button>
-            <button
-              onClick={() => { onPublish(); setMenuOpen(false); }}
-              className="flex items-center gap-1.5 font-mono text-[13px] uppercase tracking-[-0.02em] text-[#74C69D] bg-[#40916C]/20 px-3.5 py-1.5 rounded-[4px]"
+
+            <div className="hidden md:flex items-center gap-6">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link}
+                  href="#"
+                  className="text-primary/50 hover:text-primary transition-all duration-300 font-medium text-sm font-body"
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Center — inline search after first query */}
+          {showSearchBar && (
+            <form
+              onSubmit={submit}
+              className="hidden md:flex items-center bg-surface-container-low rounded-full px-4 py-1.5 gap-2 flex-1 max-w-xs mx-6"
             >
-              <Upload className="w-3 h-3" />
-              Publish
+              <span className="material-symbols-outlined text-primary/40 text-[18px]">search</span>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search styles..."
+                disabled={loading}
+                className="bg-transparent border-none text-sm focus:outline-none focus:ring-0 placeholder-primary/30 w-full font-body text-on-surface disabled:opacity-50"
+              />
+              {loading && <Loader2 className="w-3.5 h-3.5 text-primary/30 animate-spin shrink-0" />}
+            </form>
+          )}
+
+          {/* Right — actions */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onPublish}
+              className="hidden md:block px-4 py-1.5 text-sm font-medium text-primary hover:bg-surface-container-low transition-all duration-300 rounded-xl font-body"
+            >
+              Upload
+            </button>
+
+            {/* Avatar placeholder */}
+            <div className="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary overflow-hidden">
+              <span className="material-symbols-outlined text-on-primary-container text-[18px]">person</span>
+            </div>
+
+            {/* Mobile toggle */}
+            <button
+              className="md:hidden text-primary"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <span className="material-symbols-outlined">
+                {menuOpen ? "close" : "menu"}
+              </span>
             </button>
           </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden bg-white/95 glass-nav rounded-xl max-w-7xl mx-auto mt-2 px-6 py-5 space-y-1 shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link}
+                href="#"
+                className="block text-sm font-medium text-primary/50 hover:text-primary py-2 transition-colors font-body"
+              >
+                {link}
+              </a>
+            ))}
+            <div className="pt-3 mt-2 border-t border-outline-variant/20">
+              <button
+                onClick={() => { onPublish(); setMenuOpen(false); }}
+                className="w-full text-left text-sm font-medium text-primary py-2 font-body"
+              >
+                Upload a Look
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
+    </>
   );
 }

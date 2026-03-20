@@ -2,7 +2,6 @@
 
 import { SearchFilters } from "@/app/page";
 import { clsx } from "clsx";
-import { X } from "lucide-react";
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -36,14 +35,16 @@ export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
   return (
     <div className="space-y-6 text-sm">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-        <h3 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#191919]">Filters</h3>
+      <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4">
+        <h3 className="text-[10px] font-bold tracking-widest uppercase text-primary font-label">
+          Filters
+        </h3>
         {hasFilters && (
           <button
             onClick={clearAll}
-            className="flex items-center gap-1 text-xs text-[#40916C] hover:text-[#1B4332] transition-colors tracking-wide"
+            className="flex items-center gap-1 text-[10px] text-secondary hover:text-primary transition-colors tracking-wide font-label"
           >
-            <X className="w-3 h-3" /> Clear
+            <span className="material-symbols-outlined text-[14px]">close</span> Clear
           </button>
         )}
       </div>
@@ -108,7 +109,7 @@ export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold text-gray-400 tracking-[0.15em] uppercase mb-3">
+      <p className="text-[10px] font-bold text-on-surface-variant/50 tracking-widest uppercase mb-3 font-label">
         {label}
       </p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
@@ -121,10 +122,10 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
     <button
       onClick={onClick}
       className={clsx(
-        "px-2.5 py-1 text-xs border font-medium transition-all tracking-wide",
+        "px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all font-label",
         active
-          ? "bg-[#1B4332] text-white border-[#1B4332]"
-          : "bg-white text-gray-500 border-gray-200 hover:border-[#1B4332] hover:text-[#1B4332]"
+          ? "bg-primary text-on-primary border-primary"
+          : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/30 hover:border-primary/40 hover:text-primary"
       )}
     >
       {label}

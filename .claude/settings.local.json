@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/zy/fashion-search -maxdepth 3 -not -path *node_modules* -not -path *.venv* -not -path *venv* -not -path *__pycache__*)",
+      "Bash(pip install:*)",
+      "Read(//opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/bin/**)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(.venv/bin/python --version)",
+      "Bash(.venv/bin/pip show:*)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Bash(python3.13 -m venv venv --clear)",
+      "Bash(venv/bin/pip install:*)",
+      "Bash(npm install:*)",
+      "Bash(curl -s http://localhost:8000/docs -o /dev/null -w \"%{http_code}\")",
+      "Bash(kill 25923)",
+      "Bash(../.venv/bin/uvicorn main:app --port 8000)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3000 -o /dev/null -w \"%{http_code}\")",
+      "WebFetch(domain:www.plush.shop)",
+      "Bash(pkill -f \"next dev\")",
+      "WebFetch(domain:www.daytona.io)",
+      "Bash(curl -s \"https://www.daytona.io/\")",
+      "Bash(tr '}' '\\\\n')",
+      "Bash(grep -o '#[0-9a-fA-F]\\\\{3,6\\\\}')",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
