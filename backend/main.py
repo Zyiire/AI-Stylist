@@ -7,9 +7,11 @@ Startup sequence:
   3. Warm up CLIP model (loads weights into memory once)
   4. Start APScheduler for periodic catalog refresh jobs
 """
+import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
@@ -19,6 +21,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from config import settings
 from routers import search
 from services import clip_service, qdrant_service
+
+PIPELINE_DIR = Path(__file__).parent.parent / "pipeline"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +40,7 @@ async def lifespan(app: FastAPI):
 
     logger.info("Ensuring Qdrant collection exists…")
     qdrant_service.ensure_collection()
+    qdrant_service.ensure_source_index()
 
     logger.info("Warming up CLIP model…")
     _start = time.perf_counter()
@@ -63,13 +68,43 @@ async def lifespan(app: FastAPI):
 
 async def _catalog_refresh_job():
     """
-    Nightly job: re-fetch price and stock data from the catalog source
-    and update Qdrant payloads in place (no re-embedding needed).
+    Nightly job: refresh Pinterest and eBay fashion content in Qdrant.
+    Runs the ingest scripts as subprocesses so pipeline deps (torch, etc.)
+    don't need to be installed in the backend environment.
     """
     logger.info("[SCHEDULER] Catalog refresh job started")
-    # TODO: implement your catalog sync logic here
-    # e.g. fetch updated prices from your data source and call
-    # qdrant_service.get_client().set_payload(...)
+
+    python = Path(PIPELINE_DIR / ".." / ".venv" / "bin" / "python")
+    if not python.exists():
+        python = Path("python")  # fall back to PATH
+
+    scripts = [
+        (PIPELINE_DIR / "ingest_pinterest.py", ["--limit", "100"]),
+        (PIPELINE_DIR / "ingest_ebay.py",      ["--limit", "100"]),
+    ]
+
+    for script, extra_args in scripts:
+        if not script.exists():
+            logger.warning("[SCHEDULER] Script not found, skipping: %s", script)
+            continue
+        cmd = [str(python), str(script)] + extra_args
+        logger.info("[SCHEDULER] Running: %s", " ".join(cmd))
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                cwd=str(PIPELINE_DIR),
+            )
+            stdout, _ = await proc.communicate()
+            if proc.returncode == 0:
+                logger.info("[SCHEDULER] %s completed successfully.", script.name)
+            else:
+                logger.error("[SCHEDULER] %s exited with code %d:\n%s",
+                             script.name, proc.returncode, stdout.decode(errors="replace"))
+        except Exception as exc:
+            logger.exception("[SCHEDULER] Failed to run %s: %s", script.name, exc)
+
     logger.info("[SCHEDULER] Catalog refresh job completed")
 
 

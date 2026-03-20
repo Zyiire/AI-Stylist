@@ -29,6 +29,7 @@ FIELD_LINK     = "product_url"
 FIELD_COLOR    = "color"
 FIELD_GENDER   = "gender"
 FIELD_PHASH    = "phash"          # perceptual hash for dedup
+FIELD_SOURCE   = "source"         # data origin: "hf" | "pinterest" | "ebay"
 
 
 @lru_cache(maxsize=1)
@@ -78,6 +79,7 @@ def ensure_collection() -> None:
         (FIELD_CATEGORY, qmodels.PayloadSchemaType.KEYWORD),
         (FIELD_GENDER,   qmodels.PayloadSchemaType.KEYWORD),
         (FIELD_COLOR,    qmodels.PayloadSchemaType.KEYWORD),
+        (FIELD_SOURCE,   qmodels.PayloadSchemaType.KEYWORD),
         (FIELD_PRICE,    qmodels.PayloadSchemaType.FLOAT),
     ]:
         client.create_payload_index(
@@ -87,6 +89,22 @@ def ensure_collection() -> None:
         )
 
     logger.info("Collection created with HNSW indexes.")
+
+
+def ensure_source_index() -> None:
+    """
+    Idempotently add the 'source' payload index to an existing collection.
+    Safe to call even if the index already exists.
+    """
+    try:
+        get_client().create_payload_index(
+            collection_name=settings.qdrant_collection,
+            field_name=FIELD_SOURCE,
+            field_schema=qmodels.PayloadSchemaType.KEYWORD,
+        )
+        logger.info("'source' payload index created.")
+    except Exception:
+        pass  # already exists — no-op
 
 
 def upsert_products(products: list[dict[str, Any]]) -> None:

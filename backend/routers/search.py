@@ -34,6 +34,10 @@ class SearchFilters(BaseModel):
     color: list[str] | None = None
     price_min: float | None = None
     price_max: float | None = None
+    source: list[str] | None = Field(
+        default=None,
+        description="Filter by data source: 'pinterest', 'ebay', or 'hf' (HuggingFace dataset)"
+    )
 
 
 class ProductResult(BaseModel):
@@ -129,6 +133,7 @@ async def search_by_text(body: TextSearchRequest):
         body.filters.color if body.filters else None,
         body.filters.price_min if body.filters else None,
         body.filters.price_max if body.filters else None,
+        body.filters.source if body.filters else None,
     ) if body.filters else None
 
     hits = qdrant_service.search(vector, top_k=body.top_k, filters=filters or None)
@@ -186,6 +191,7 @@ def _build_filters(
     color: list[str] | None,
     price_min: float | None,
     price_max: float | None,
+    source: list[str] | None = None,
 ) -> dict:
     filters = {}
     if category:
@@ -194,6 +200,8 @@ def _build_filters(
         filters["gender"] = gender
     if color:
         filters["color"] = color
+    if source:
+        filters["source"] = source
     if price_min is not None or price_max is not None:
         price_range = {}
         if price_min is not None:

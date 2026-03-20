@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Verdant — Fashion Discovery",
+  title: "Mira",
   description:
     "Find, save, and publish fashion pieces you love. Powered by AI visual search.",
   openGraph: {
-    title: "Verdant — Fashion Discovery",
+    title: "Mira",
     description: "The fashion community powered by AI.",
     type: "website",
   },
