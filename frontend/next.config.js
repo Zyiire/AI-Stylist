@@ -2,8 +2,16 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "**" },
-      { protocol: "http",  hostname: "**" },
+      // Cloudinary (ingested product images)
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      // eBay image CDN
+      { protocol: "https", hostname: "i.ebayimg.com" },
+      { protocol: "https", hostname: "ir.ebaystatic.com" },
+      // Pinterest image CDN
+      { protocol: "https", hostname: "i.pinimg.com" },
+      // HuggingFace / dataset placeholder images
+      { protocol: "https", hostname: "*.huggingface.co" },
+      { protocol: "https", hostname: "placeholder.fashion" },
     ],
   },
   async rewrites() {

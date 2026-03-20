@@ -41,7 +41,7 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 # ── Config ────────────────────────────────────────────────────────────────────
 QDRANT_URL        = os.environ["QDRANT_URL"]
 QDRANT_API_KEY    = os.environ["QDRANT_API_KEY"]
-COLLECTION_NAME   = os.getenv("QDRANT_COLLECTION", "fashion_products")
+COLLECTION_NAME   = os.getenv("QDRANT_COLLECTION", "AI-Fashion")
 CLIP_MODEL        = os.getenv("CLIP_MODEL", "ViT-B-32")
 CLIP_PRETRAINED   = os.getenv("CLIP_PRETRAINED", "openai")
 EMBEDDING_DIM     = 512
@@ -49,9 +49,9 @@ BATCH_SIZE        = 64          # upsert batch size
 PHASH_THRESHOLD   = 8           # Hamming distance; images closer than this are dupes
 HF_DATASET        = "ashraq/fashion-product-images-small"
 
-CLOUDINARY_CLOUD  = os.getenv("CLOUDINARY_CLOUD_NAME", "")
-CLOUDINARY_KEY    = os.getenv("CLOUDINARY_API_KEY", "")
-CLOUDINARY_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
+CLOUDINARY_CLOUD  = os.getenv("CLOUDINARY_CLOUD_NAME", "dgioqlisq")
+CLOUDINARY_KEY    = os.getenv("CLOUDINARY_API_KEY", "566422168138434")
+CLOUDINARY_SECRET = os.getenv("CLOUDINARY_API_SECRET", "D4gVtjDJA9nZ0V5lOjAlcTcnIxQ")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s")
 logger = logging.getLogger(__name__)

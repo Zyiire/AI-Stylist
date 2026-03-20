@@ -9,6 +9,18 @@ export const metadata: Metadata = {
     title: "Mira",
     description: "The fashion community powered by AI.",
     type: "website",
+    images: "/MiraIcon.png",
+  },
+  icons: {
+    icon: "/MiraIcon.png",
+    apple: "/MiraIcon.png",
+    other: [
+      { rel: "apple-touch-icon", url: "/MiraIcon.png" }
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: "/MiraIcon.png",
   },
 };
 
@@ -26,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        <link rel="icon" href="/MiraIcon.png" />
       </head>
       <body className="min-h-screen bg-surface antialiased font-body text-on-surface">
         {children}
