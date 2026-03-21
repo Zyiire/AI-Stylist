@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     clip_pretrained: str = "openai"
     embedding_dim: int = 512
 
+    # CORS — comma-separated origins, or "*" for local dev
+    # Production: set to your Vercel URL e.g. "https://mira.vercel.app"
+    allowed_origins: str = "*"
+
     # Search defaults
     default_top_k: int = 24
     hnsw_ef: int = 128          # higher = better recall, slower
