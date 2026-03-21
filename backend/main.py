@@ -17,8 +17,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from config import settings
+from limiter import limiter
 from routers import search
 from services import clip_service, qdrant_service
 
@@ -118,12 +122,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── Rate limiting ─────────────────────────────────────────────────────────────
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # ── Middleware ────────────────────────────────────────────────────────────────
+
+_origins = [o.strip() for o in settings.allowed_origins.split(",")]
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # tighten to your Vercel domain in production
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

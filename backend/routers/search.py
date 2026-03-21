@@ -16,9 +16,10 @@ import os
 import time
 from typing import Annotated
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel, Field
 
+from limiter import limiter
 from services import clip_service, qdrant_service
 
 logger = logging.getLogger(__name__)
@@ -145,7 +146,9 @@ def _build_filters(
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/image", response_model=SearchResponse)
+@limiter.limit("20/minute")
 async def search_by_image(
+    request: Request,
     file: Annotated[UploadFile, File(description="Clothing image to search with")],
     top_k: int = Query(default=24, ge=1, le=100),
     category: list[str] | None = Query(default=None),
@@ -186,7 +189,8 @@ async def search_by_image(
 
 
 @router.post("/text", response_model=SearchResponse)
-async def search_by_text(body: TextSearchRequest):
+@limiter.limit("30/minute")
+async def search_by_text(request: Request, body: TextSearchRequest):
     """
     Search the catalog using a text description.
     Example: "oversized beige linen blazer" or "red floral midi dress".
@@ -238,7 +242,9 @@ async def get_product(product_id: int):
 
 
 @router.get("/feed", response_model=FeedResponse)
+@limiter.limit("60/minute")
 async def get_feed(
+    request: Request,
     limit: int = Query(default=24, ge=1, le=100),
     offset: int | None = Query(default=None),
 ):
@@ -261,7 +267,9 @@ async def health():
 
 
 @router.post("/upload", response_model=UploadResponse)
+@limiter.limit("10/minute")
 async def upload_item(
+    request: Request,
     file: UploadFile = File(...),
     title: str = Form(...),
     description: str = Form(""),

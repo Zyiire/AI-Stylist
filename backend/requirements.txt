@@ -13,3 +13,4 @@ cloudinary==1.40.0
 apscheduler==3.10.4
 pydantic>=2.9.0
 pydantic-settings>=2.5.0
+slowapi>=0.1.9
