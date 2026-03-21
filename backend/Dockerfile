@@ -8,7 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 libsm6 libxext6 libxrender-dev libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps first (layer-cached unless requirements change)
+# Install CPU-only torch first (avoids pulling the 2GB GPU build)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining Python deps (layer-cached unless requirements change)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
