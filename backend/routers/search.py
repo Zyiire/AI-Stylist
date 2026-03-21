@@ -259,11 +259,7 @@ async def get_feed(
 
 @router.get("/health")
 async def health():
-    try:
-        info = qdrant_service.collection_info()
-        return {"status": "ok", "collection": info}
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+    return {"status": "ok"}
 
 
 @router.post("/upload", response_model=UploadResponse)
