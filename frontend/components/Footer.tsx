@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="w-full px-8 md:px-16 border-t border-primary/5 bg-surface-container-low pt-20 pb-10 mt-24">
@@ -58,9 +60,9 @@ export function Footer() {
             </span>
             <ul className="space-y-2">
               <li>
-                <a className="text-sm text-on-surface-variant/60 hover:text-primary transition-colors font-body" href="#">
+                <Link className="text-sm text-on-surface-variant/60 hover:text-primary transition-colors font-body" href="/privacy">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
                 <a className="text-sm text-on-surface-variant/60 hover:text-primary transition-colors font-body" href="#">
@@ -74,7 +76,7 @@ export function Footer() {
 
       <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-primary/5 flex flex-col md:flex-row justify-between items-center gap-4">
         <span className="text-sm text-on-surface-variant/40 font-body">
-          © 2024 Verdant. Powered by AI.
+          © 2026 Mira. Powered by AI.
         </span>
         <div className="flex gap-6">
           <span className="material-symbols-outlined text-primary/40 cursor-pointer hover:text-primary transition-colors">
