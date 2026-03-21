@@ -3,7 +3,7 @@ export function Footer() {
     <footer className="w-full px-8 md:px-16 border-t border-primary/5 bg-surface-container-low pt-20 pb-10 mt-24">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
         <div className="space-y-4 max-w-sm">
-          <span className="text-lg font-bold text-primary font-headline">Verdant</span>
+          <span className="text-lg font-bold text-primary font-headline">Mira</span>
           <p className="text-on-surface-variant/60 text-sm leading-relaxed font-body">
             A sophisticated platform where fashion meets intelligence. Curate your visual
             identity with precision and AI-driven insights.
