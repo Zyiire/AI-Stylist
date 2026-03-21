@@ -1,21 +1,25 @@
 "use client";
 
-const MOCK_PINS = [
-  { id: 1,  title: "Minimalist Structures",    creator: "@elara_vogue",    similarity: 98, aspect: "aspect-[3/4]",  bg: "bg-surface-container" },
-  { id: 2,  title: "Urban Neoclassical",       creator: "@marcus_atelier", similarity: 84, aspect: "aspect-[2/3]",  bg: "bg-surface-container-high" },
-  { id: 3,  title: "Textile Experiment 04",    creator: "@sara_designs",   similarity: 92, aspect: "aspect-square", bg: "bg-surface-variant" },
-  { id: 4,  title: "Brutalist Accessories",    creator: "@lucas_v",        similarity: 77, aspect: "aspect-[3/5]",  bg: "bg-surface-container" },
-  { id: 5,  title: "Gender Fluid Tonalism",    creator: "@jana_styles",    similarity: 89, aspect: "aspect-[4/5]",  bg: "bg-surface-container-high" },
-  { id: 6,  title: "Ephemeral Silk",           creator: "@arch_fashion",   similarity: 94, aspect: "aspect-[3/4]",  bg: "bg-surface-variant" },
-  { id: 7,  title: "Capsule Organization",     creator: null,              similarity: 65, aspect: "aspect-[4/3]",  bg: "bg-surface-container" },
-  { id: 8,  title: "Tweed Reimagined",         creator: null,              similarity: 91, aspect: "aspect-[3/5]",  bg: "bg-surface-container-high" },
-  { id: 9,  title: "Coastal Minimalism",       creator: "@ines_f",         similarity: 87, aspect: "aspect-[3/4]",  bg: "bg-surface-variant" },
-  { id: 10, title: "Dark Academia Edit",       creator: "@theo_curator",   similarity: 95, aspect: "aspect-[2/3]",  bg: "bg-surface-container" },
-  { id: 11, title: "Summer Layering",          creator: "@ami_style",      similarity: 73, aspect: "aspect-[4/5]",  bg: "bg-surface-container-high" },
-  { id: 12, title: "Monochrome Study",         creator: "@piet_v",         similarity: 88, aspect: "aspect-square", bg: "bg-surface-variant" },
-];
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { Product } from "@/app/page";
+import { optimizeImage } from "@/lib/cloudinary";
+
+const ASPECT_CLASSES = ["aspect-[3/4]", "aspect-[2/3]", "aspect-square", "aspect-[3/5]", "aspect-[4/5]"];
 
 export function FeedGrid({ onTabChange }: { onTabChange: (tab: "discover") => void }) {
+  const [items, setItems] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    fetch(`${apiUrl}/search/feed?limit=24`)
+      .then((r) => r.json())
+      .then((data) => setItems(data.items ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-6 pt-28 pb-32">
       {/* Header */}
@@ -36,57 +40,65 @@ export function FeedGrid({ onTabChange }: { onTabChange: (tab: "discover") => vo
             onClick={() => onTabChange("discover")}
             className="bg-white border border-outline-variant/30 px-5 py-2.5 rounded-full text-xs font-bold font-label tracking-widest uppercase text-outline hover:text-primary transition-colors"
           >
-            Latest
+            Discover
           </button>
         </div>
       </header>
 
       {/* Masonry grid */}
       <div className="masonry">
-        {MOCK_PINS.map((pin) => (
-          <div key={pin.id} className="masonry-item group cursor-pointer">
-            <div className={`relative overflow-hidden rounded-xl ${pin.bg} ${pin.aspect}`}>
-              {/* Placeholder image area */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-outline-variant text-5xl">image</span>
-              </div>
-
-              {/* Hover tint */}
-              <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* AI flare icon */}
-              <div className="absolute top-3 right-3 bg-white/70 glass-nav p-2 rounded-full shadow-sm">
-                <span className="material-symbols-outlined text-primary text-[18px]">flare</span>
-              </div>
-
-              {/* Creator overlay */}
-              {pin.creator && (
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary-container border-2 border-white flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-on-primary-container text-[14px]">person</span>
+        {loading
+          ? Array.from({ length: 12 }).map((_, i) => <SkeletonFeedCard key={i} idx={i} />)
+          : items.map((item, idx) => {
+              const aspectClass = ASPECT_CLASSES[idx % ASPECT_CLASSES.length];
+              return (
+                <div key={item.product_id} className="masonry-item group cursor-pointer">
+                  <div className={`relative overflow-hidden rounded-xl bg-surface-container ${aspectClass}`}>
+                    <Image
+                      src={optimizeImage(item.image_url)}
+                      alt={item.name}
+                      fill
+                      quality={90}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute top-3 right-3 bg-white/70 glass-nav p-2 rounded-full shadow-sm">
+                      <span className="material-symbols-outlined text-primary text-[18px]">flare</span>
+                    </div>
                   </div>
-                  <span className="text-white text-xs font-bold font-label tracking-wide">{pin.creator}</span>
+                  <div className="mt-2.5 px-1">
+                    <h3 className="font-headline text-sm font-semibold text-on-surface">{item.name}</h3>
+                    <p className="text-[10px] font-label font-bold text-secondary uppercase tracking-[0.15rem] mt-0.5">
+                      {item.brand || item.category || "Community"}
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Caption */}
-            <div className="mt-2.5 px-1">
-              <h3 className="font-headline text-sm font-semibold text-on-surface">{pin.title}</h3>
-              <p className="text-[10px] font-label font-bold text-secondary uppercase tracking-[0.15rem] mt-0.5">
-                {pin.similarity}% AI Match
-              </p>
-            </div>
-          </div>
-        ))}
+              );
+            })}
       </div>
 
       {/* End marker */}
-      <div className="mt-24 text-center">
-        <p className="text-[10px] uppercase tracking-[0.4em] font-label text-on-surface-variant/40 mb-8">
-          End of Feed
-        </p>
-        <div className="w-px h-16 bg-primary/10 mx-auto" />
+      {!loading && (
+        <div className="mt-24 text-center">
+          <p className="text-[10px] uppercase tracking-[0.4em] font-label text-on-surface-variant/40 mb-8">
+            End of Feed
+          </p>
+          <div className="w-px h-16 bg-primary/10 mx-auto" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SkeletonFeedCard({ idx }: { idx: number }) {
+  const aspectClass = ASPECT_CLASSES[idx % ASPECT_CLASSES.length];
+  return (
+    <div className="masonry-item">
+      <div className={`${aspectClass} skeleton rounded-xl`} />
+      <div className="mt-2.5 px-1 space-y-1.5">
+        <div className="h-3 skeleton w-3/4 rounded" />
+        <div className="h-2 skeleton w-1/3 rounded" />
       </div>
     </div>
   );

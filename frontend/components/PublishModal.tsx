@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
@@ -14,6 +15,7 @@ const DETECTED_ATTRS = ["Wool Blend", "Oversized Silhouette", "Tonal Green", "Do
 const SUGGESTED_TAGS = ["#minimalism", "#outerwear", "#scandi"];
 
 export function PublishModal({ isOpen, onClose }: PublishModalProps) {
+  const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
@@ -24,10 +26,12 @@ export function PublishModal({ isOpen, onClose }: PublishModalProps) {
   const [isPrivate, setIsPrivate] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { user } = useAuth();
 
   const onDrop = useCallback((files: File[]) => {
     const f = files[0];
     if (!f) return;
+    setFile(f);
     setPreview(URL.createObjectURL(f));
     setScanning(true);
     setScanned(false);
@@ -48,17 +52,35 @@ export function PublishModal({ isOpen, onClose }: PublishModalProps) {
   };
 
   const handlePublish = async () => {
-    if (!preview || !title.trim()) return;
+    if (!file || !title.trim()) return;
     setPublishing(true);
-    await new Promise((r) => setTimeout(r, 1800));
-    setPublishing(false);
-    setSuccess(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("title", title.trim());
+      form.append("description", description);
+      form.append("tags", tags.join(","));
+      form.append("is_private", String(isPrivate));
+      if (user?.id) form.append("user_id", user.id);
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/search/upload`, { method: "POST", body: form });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { detail?: string }).detail ?? `Error ${res.status}`);
+      }
+      setSuccess(true);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Publish failed.");
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const handleClose = () => {
     onClose();
     setTimeout(() => {
-      setPreview(null); setScanning(false); setScanned(false);
+      setFile(null); setPreview(null); setScanning(false); setScanned(false);
       setTitle(""); setDescription(""); setTags(SUGGESTED_TAGS);
       setTagInput(""); setIsPrivate(false); setSuccess(false);
     }, 300);
@@ -244,7 +266,7 @@ export function PublishModal({ isOpen, onClose }: PublishModalProps) {
                 <div className="pt-4">
                   <button
                     onClick={handlePublish}
-                    disabled={!preview || !title.trim() || publishing || scanning}
+                    disabled={!file || !title.trim() || publishing || scanning}
                     className="w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-xl text-base hover:bg-primary-container transition-all flex items-center justify-center gap-3 group shadow-lg shadow-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {publishing ? (

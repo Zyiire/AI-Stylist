@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
+import { optimizeImage } from "@/lib/cloudinary";
 import { Product } from "@/app/page";
 
 interface ResultsGridProps {
@@ -111,7 +112,7 @@ export function ResultsGrid({ results, loading, onFeedback, query, imagePreview 
         </div>
 
         <div className="masonry">
-          {results.map((product, idx) => (
+          {(exactTab ? results.slice(0, 3) : results).map((product, idx) => (
             <div key={product.product_id} className="masonry-item">
               <PinCard product={product} idx={idx} onFeedback={onFeedback} />
             </div>
@@ -141,10 +142,11 @@ function PinCard({
     >
       <div className={`relative ${aspectClass} bg-surface-container-low overflow-hidden`}>
         <Image
-          src={product.image_url}
+          src={optimizeImage(product.image_url)}
           alt={product.name}
           fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          quality={90}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
           className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
         />
 

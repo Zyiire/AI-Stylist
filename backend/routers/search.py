@@ -10,7 +10,9 @@ Endpoints:
 """
 from __future__ import annotations
 
+import hashlib
 import logging
+import os
 import time
 from typing import Annotated
 
@@ -68,6 +70,76 @@ class FeedbackRequest(BaseModel):
     query_id: str
     clicked_product_id: int
     rank: int = Field(description="Position of clicked result (0-indexed)")
+
+
+class FeedResponse(BaseModel):
+    items: list[ProductResult]
+    total: int
+    next_offset: int | None = None
+
+
+class UploadResponse(BaseModel):
+    product_id: int
+    image_url: str
+    message: str
+
+
+# ── Helpers (defined before endpoints so static analysis resolves them) ────────
+
+def _validate_image_upload(file: UploadFile) -> None:
+    allowed = {"image/jpeg", "image/png", "image/webp"}
+    if file.content_type not in allowed:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported media type '{file.content_type}'. Use JPEG, PNG, or WEBP.",
+        )
+
+
+def _upload_to_cloudinary(image_bytes: bytes, product_id: int) -> str:
+    try:
+        import cloudinary
+        import cloudinary.uploader
+        cloudinary.config(
+            cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
+            api_key=os.getenv("CLOUDINARY_API_KEY", ""),
+            api_secret=os.getenv("CLOUDINARY_API_SECRET", ""),
+        )
+        result = cloudinary.uploader.upload(
+            image_bytes,
+            public_id=f"community/{product_id}",
+            overwrite=False,
+            resource_type="image",
+        )
+        return result["secure_url"]
+    except Exception:
+        return f"https://placeholder.fashion/community/{product_id}.jpg"
+
+
+def _build_filters(
+    category: list[str] | None,
+    gender: str | None,
+    color: list[str] | None,
+    price_min: float | None,
+    price_max: float | None,
+    source: list[str] | None = None,
+) -> dict:
+    filters = {}
+    if category:
+        filters["category"] = category
+    if gender:
+        filters["gender"] = gender
+    if color:
+        filters["color"] = color
+    if source:
+        filters["source"] = source
+    if price_min is not None or price_max is not None:
+        price_range = {}
+        if price_min is not None:
+            price_range["gte"] = price_min
+        if price_max is not None:
+            price_range["lte"] = price_max
+        filters["price"] = price_range
+    return filters
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -165,6 +237,20 @@ async def get_product(product_id: int):
     return ProductResult(**product)
 
 
+@router.get("/feed", response_model=FeedResponse)
+async def get_feed(
+    limit: int = Query(default=24, ge=1, le=100),
+    offset: int | None = Query(default=None),
+):
+    """Return a paginated listing of catalog items for the community feed."""
+    items, next_offset = qdrant_service.scroll_products(limit=limit, offset_id=offset)
+    return FeedResponse(
+        items=[ProductResult(**{**item, "score": 0.0}) for item in items],
+        total=len(items),
+        next_offset=next_offset,
+    )
+
+
 @router.get("/health")
 async def health():
     try:
@@ -174,39 +260,52 @@ async def health():
         raise HTTPException(status_code=503, detail=str(exc))
 
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+@router.post("/upload", response_model=UploadResponse)
+async def upload_item(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    description: str = Form(""),
+    tags: str = Form(""),
+    is_private: bool = Form(False),
+    user_id: str = Form(""),
+):
+    """
+    Publish a community fashion item. Embeds the image with CLIP and stores
+    it in Qdrant so it appears in future searches.
+    """
+    _validate_image_upload(file)
+    image_bytes = await file.read()
+    if len(image_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image must be under 10 MB.")
 
-def _validate_image_upload(file: UploadFile) -> None:
-    allowed = {"image/jpeg", "image/png", "image/webp"}
-    if file.content_type not in allowed:
-        raise HTTPException(
-            status_code=415,
-            detail=f"Unsupported media type '{file.content_type}'. Use JPEG, PNG, or WEBP.",
-        )
+    product_id = int(hashlib.md5(image_bytes).hexdigest()[:12], 16) % (2 ** 53)
+    image_url = _upload_to_cloudinary(image_bytes, product_id)
 
+    try:
+        vector = clip_service.embed_image_bytes(image_bytes)
+    except Exception as exc:
+        logger.exception("CLIP embedding failed during upload")
+        raise HTTPException(status_code=422, detail=f"Embedding failed: {exc}")
 
-def _build_filters(
-    category: list[str] | None,
-    gender: str | None,
-    color: list[str] | None,
-    price_min: float | None,
-    price_max: float | None,
-    source: list[str] | None = None,
-) -> dict:
-    filters = {}
-    if category:
-        filters["category"] = category
-    if gender:
-        filters["gender"] = gender
-    if color:
-        filters["color"] = color
-    if source:
-        filters["source"] = source
-    if price_min is not None or price_max is not None:
-        price_range = {}
-        if price_min is not None:
-            price_range["gte"] = price_min
-        if price_max is not None:
-            price_range["lte"] = price_max
-        filters["price"] = price_range
-    return filters
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+    qdrant_service.upsert_products([{
+        "product_id":  product_id,
+        "vector":      vector,
+        "name":        title,
+        "description": description,
+        "tags":        tag_list,
+        "is_private":  is_private,
+        "user_id":     user_id,
+        "image_url":   image_url,
+        "product_url": "",
+        "brand":       "",
+        "category":    "Community",
+        "color":       "",
+        "gender":      "Unisex",
+        "price":       0.0,
+        "source":      "community",
+    }])
+
+    logger.info("Community upload stored: product_id=%d title=%r", product_id, title)
+    return UploadResponse(product_id=product_id, image_url=image_url, message="Published successfully.")
+

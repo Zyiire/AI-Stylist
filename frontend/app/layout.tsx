@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "Mira",
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/MiraIcon.png" />
       </head>
       <body className="min-h-screen bg-surface antialiased font-body text-on-surface">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

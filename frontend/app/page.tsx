@@ -4,9 +4,11 @@ import { useState, useCallback } from "react";
 import { Navbar, type ActiveTab } from "@/components/Navbar";
 import { FeedGrid } from "@/components/FeedGrid";
 import { PublishModal } from "@/components/PublishModal";
+import { AuthModal } from "@/components/AuthModal";
 import { ResultsGrid } from "@/components/ResultsGrid";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { Footer } from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 import { useDropzone } from "react-dropzone";
 import { Loader2 } from "lucide-react";
 
@@ -40,7 +42,9 @@ export default function HomePage() {
   const [filters, setFilters]           = useState<SearchFilters>({});
   const [hasSearched, setHasSearched]   = useState(false);
   const [publishOpen, setPublishOpen]   = useState(false);
+  const [authOpen, setAuthOpen]         = useState(false);
   const [filtersOpen, setFiltersOpen]   = useState(false);
+  const { user, signOut }               = useAuth();
   const [lastQuery, setLastQuery]       = useState<string | undefined>();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [queryId]                       = useState(() => Math.random().toString(36).slice(2));
@@ -104,6 +108,7 @@ export default function HomePage() {
         activeTab={activeTab}
         onTabChange={handleTabChange}
         onUpload={() => setPublishOpen(true)}
+        onAuthOpen={() => setAuthOpen(true)}
         onTextSearch={handleTextSearch}
         loading={loading}
       />
@@ -178,19 +183,75 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Collections / Profile placeholders */}
-      {(activeTab === "collections" || activeTab === "profile") && (
-        <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
-          <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">
-            {activeTab === "collections" ? "auto_stories" : "person"}
-          </span>
-          <h2 className="font-headline text-2xl font-bold text-primary mb-2 capitalize">{activeTab}</h2>
-          <p className="text-on-surface-variant font-body text-sm">Coming soon.</p>
-        </div>
+      {/* Collections tab */}
+      {activeTab === "collections" && (
+        user ? (
+          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
+            <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">auto_stories</span>
+            <h2 className="font-headline text-2xl font-bold text-primary mb-2">Collections</h2>
+            <p className="text-on-surface-variant font-body text-sm">Coming soon.</p>
+          </div>
+        ) : (
+          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
+            <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">auto_stories</span>
+            <h2 className="font-headline text-2xl font-bold text-primary mb-2">Save your looks</h2>
+            <p className="text-on-surface-variant font-body text-sm max-w-xs mb-8">
+              Sign in to start building your personal fashion archive.
+            </p>
+            <button
+              onClick={() => setAuthOpen(true)}
+              className="bg-primary text-on-primary px-8 py-3 rounded-xl text-sm font-bold font-label tracking-widest uppercase hover:bg-primary-container transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        )
+      )}
+
+      {/* Profile tab */}
+      {activeTab === "profile" && (
+        user ? (
+          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32 gap-6">
+            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
+              <span className="font-headline text-3xl font-extrabold text-on-primary">
+                {user.email?.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <h2 className="font-headline text-2xl font-bold text-primary">{user.email}</h2>
+              <p className="text-on-surface-variant font-body text-sm mt-1">
+                Member since{" "}
+                {new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              </p>
+            </div>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 text-sm font-bold font-label tracking-widest uppercase text-outline border border-outline-variant/40 px-6 py-3 rounded-xl hover:border-primary/40 hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
+            <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">person</span>
+            <h2 className="font-headline text-2xl font-bold text-primary mb-2">Your Profile</h2>
+            <p className="text-on-surface-variant font-body text-sm max-w-xs mb-8">
+              Sign in to access your personal atelier.
+            </p>
+            <button
+              onClick={() => setAuthOpen(true)}
+              className="bg-primary text-on-primary px-8 py-3 rounded-xl text-sm font-bold font-label tracking-widest uppercase hover:bg-primary-container transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        )
       )}
 
       <Footer />
       <PublishModal isOpen={publishOpen} onClose={() => setPublishOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
 }

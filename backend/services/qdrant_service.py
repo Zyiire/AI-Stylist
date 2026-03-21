@@ -186,6 +186,22 @@ def collection_info() -> dict[str, Any]:
     }
 
 
+def scroll_products(
+    limit: int = 24,
+    offset_id: int | None = None,
+) -> tuple[list[dict[str, Any]], int | None]:
+    """Page through the catalog without a query vector for the community feed."""
+    points, next_offset = get_client().scroll(
+        collection_name=settings.qdrant_collection,
+        limit=limit,
+        offset=offset_id,
+        with_payload=True,
+        with_vectors=False,
+    )
+    items = [{"product_id": p.id, **p.payload} for p in points]
+    return items, next_offset
+
+
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def _build_filter(filters: dict[str, Any]) -> qmodels.Filter:

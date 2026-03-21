@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export type ActiveTab = "feed" | "discover" | "collections" | "profile";
 
@@ -9,19 +10,20 @@ interface NavbarProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
   onUpload: () => void;
+  onAuthOpen: () => void;
   onTextSearch: (q: string) => void;
   loading: boolean;
 }
 
-export function Navbar({ activeTab, onTabChange, onUpload, onTextSearch, loading }: NavbarProps) {
+export function Navbar({ activeTab, onTabChange, onUpload, onAuthOpen, onTextSearch, loading }: NavbarProps) {
+  const { user } = useAuth();
   const [q, setQ] = useState("");
+
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : null;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (q.trim()) {
-      onTabChange("discover");
-      onTextSearch(q.trim());
-    }
+    if (q.trim()) { onTabChange("discover"); onTextSearch(q.trim()); }
   };
 
   return (
@@ -73,12 +75,30 @@ export function Navbar({ activeTab, onTabChange, onUpload, onTextSearch, loading
             <span className="material-symbols-outlined text-primary cursor-pointer hidden sm:block">notifications</span>
             <span className="material-symbols-outlined text-primary cursor-pointer hidden sm:block">auto_awesome</span>
 
-            <button
-              onClick={onUpload}
-              className="bg-primary text-on-primary px-5 py-1.5 rounded-full text-xs font-bold font-label tracking-widest uppercase hover:scale-95 transition-transform duration-200"
-            >
-              Upload
-            </button>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onUpload}
+                  className="bg-primary text-on-primary px-5 py-1.5 rounded-full text-xs font-bold font-label tracking-widest uppercase hover:scale-95 transition-transform duration-200"
+                >
+                  Upload
+                </button>
+                <button
+                  onClick={() => onTabChange("profile")}
+                  title={user.email ?? "Profile"}
+                  className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold font-label hover:opacity-80 transition-opacity"
+                >
+                  {initials}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onAuthOpen}
+                className="bg-primary text-on-primary px-5 py-1.5 rounded-full text-xs font-bold font-label tracking-widest uppercase hover:scale-95 transition-transform duration-200"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -108,12 +128,14 @@ export function Navbar({ activeTab, onTabChange, onUpload, onTextSearch, loading
         ))}
       </nav>
 
-      {/* FAB — upload shortcut on mobile */}
+      {/* FAB */}
       <button
-        onClick={onUpload}
+        onClick={user ? onUpload : onAuthOpen}
         className="fixed right-6 bottom-24 md:bottom-8 z-40 bg-primary text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform"
       >
-        <span className="material-symbols-outlined text-[28px]">add</span>
+        <span className="material-symbols-outlined text-[28px]">
+          {user ? "add" : "person"}
+        </span>
       </button>
     </>
   );
