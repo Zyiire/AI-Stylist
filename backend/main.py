@@ -37,6 +37,14 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
 
 
+async def _warmup_clip() -> None:
+    """Load CLIP weights in a thread pool so the event loop stays free."""
+    loop = asyncio.get_event_loop()
+    _start = time.perf_counter()
+    await loop.run_in_executor(None, clip_service._load_model)
+    logger.info("CLIP warm-up took %.2fs", time.perf_counter() - _start)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── startup ──────────────────────────────────────────────────────────────
@@ -46,10 +54,9 @@ async def lifespan(app: FastAPI):
     qdrant_service.ensure_collection()
     qdrant_service.ensure_source_index()
 
-    logger.info("Warming up CLIP model…")
-    _start = time.perf_counter()
-    clip_service._load_model()          # force load; cached via lru_cache
-    logger.info("CLIP warm-up took %.2fs", time.perf_counter() - _start)
+    # Load CLIP in background — server starts accepting requests immediately
+    logger.info("CLIP model loading in background…")
+    asyncio.create_task(_warmup_clip())
 
     # Schedule nightly catalog refresh (price/stock sync)
     scheduler.add_job(
