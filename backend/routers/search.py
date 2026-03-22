@@ -248,9 +248,10 @@ async def get_feed(
 ):
     """Return a paginated listing of catalog items for the community feed."""
     items, next_offset = qdrant_service.scroll_products(limit=limit, offset_id=offset)
+    valid = [item for item in items if item.get("image_url") and item.get("name")]
     return FeedResponse(
-        items=[ProductResult(**{**item, "score": 0.0}) for item in items],
-        total=len(items),
+        items=[ProductResult(**{**item, "score": 0.0}) for item in valid],
+        total=len(valid),
         next_offset=next_offset,
     )
 

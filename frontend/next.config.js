@@ -12,6 +12,8 @@ const nextConfig = {
       // HuggingFace / dataset placeholder images
       { protocol: "https", hostname: "*.huggingface.co" },
       { protocol: "https", hostname: "placeholder.fashion" },
+      // Allow any HTTPS image — Qdrant catalog may contain arbitrary CDN URLs
+      { protocol: "https", hostname: "**" },
     ],
   },
   async rewrites() {

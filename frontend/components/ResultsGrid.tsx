@@ -148,6 +148,7 @@ function PinCard({
           quality={90}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
           className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
         />
 
         <div className="pin-overlay absolute inset-0 bg-primary/15" />

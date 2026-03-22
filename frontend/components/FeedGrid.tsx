@@ -61,6 +61,7 @@ export function FeedGrid({ onTabChange }: { onTabChange: (tab: "discover") => vo
                       quality={90}
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
                       className="object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
                     />
                     <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 right-3 bg-white/70 glass-nav p-2 rounded-full shadow-sm">
