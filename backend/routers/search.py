@@ -8,8 +8,6 @@ Endpoints:
   GET  /product/{id}   – fetch a single product by ID
   GET  /health         – liveness check
 """
-from __future__ import annotations
-
 import hashlib
 import logging
 import os
