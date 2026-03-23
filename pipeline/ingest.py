@@ -39,8 +39,8 @@ from tqdm import tqdm
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 # ── Config ────────────────────────────────────────────────────────────────────
-QDRANT_URL        = os.environ["QDRANT_URL"]
-QDRANT_API_KEY    = os.environ["QDRANT_API_KEY"]
+QDRANT_URL        = os.environ["https://82b99a6b-4da3-4667-8ee7-da4a29343edd.us-east4-0.gcp.cloud.qdrant.io:6333"]
+QDRANT_API_KEY    = os.environ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.jVTnHsG3TKG7oyF-SlaxOo37KYo5ADfXJeRkxATHCEs"]
 COLLECTION_NAME   = os.getenv("QDRANT_COLLECTION", "AI-Fashion")
 CLIP_MODEL        = os.getenv("CLIP_MODEL", "ViT-B-32")
 CLIP_PRETRAINED   = os.getenv("CLIP_PRETRAINED", "openai")
