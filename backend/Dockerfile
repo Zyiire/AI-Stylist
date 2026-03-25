@@ -15,6 +15,10 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download CLIP ViT-B/32 weights into the image so Railway never has
+# to fetch them at runtime (avoids OOM spike on cold start)
+RUN python -c "import open_clip; open_clip.create_model_and_transforms('ViT-B-32', pretrained='openai')"
+
 # Copy source
 COPY . .
 RUN chmod +x start.sh
