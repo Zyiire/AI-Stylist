@@ -10,13 +10,14 @@ const ASPECT_CLASSES = ["aspect-[3/4]", "aspect-[2/3]", "aspect-square", "aspect
 export function FeedGrid({ onTabChange }: { onTabChange: (tab: "discover") => void }) {
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
     fetch(`${apiUrl}/search/feed?limit=24`)
       .then((r) => r.json())
       .then((data) => setItems(data.items ?? []))
-      .catch(() => {})
+      .catch(() => setError("Could not reach the server — it may still be starting up. Refresh in a moment."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -79,8 +80,16 @@ export function FeedGrid({ onTabChange }: { onTabChange: (tab: "discover") => vo
             })}
       </div>
 
+      {/* Error state */}
+      {!loading && error && (
+        <div className="mt-24 text-center">
+          <span className="material-symbols-outlined text-outline/40 text-4xl mb-4 block">cloud_off</span>
+          <p className="text-sm text-outline font-body">{error}</p>
+        </div>
+      )}
+
       {/* End marker */}
-      {!loading && (
+      {!loading && !error && (
         <div className="mt-24 text-center">
           <p className="text-[10px] uppercase tracking-[0.4em] font-label text-on-surface-variant/40 mb-8">
             End of Feed
