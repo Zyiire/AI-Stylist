@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # CORS — comma-separated origins, or "*" for local dev
     # Production: set to your Vercel URL e.g. "https://mira.vercel.app"
-    allowed_origins: str = "*"
+    allowed_origins: str = "https://mira-4.vercel.app"
 
     # Search defaults
     default_top_k: int = 24
