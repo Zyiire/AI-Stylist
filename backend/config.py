@@ -3,14 +3,14 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Qdrant
-    qdrant_url: str = "https://your-cluster.qdrant.io"
-    qdrant_api_key: str = ""
-    qdrant_collection: str = "fashion_products"
+    qdrant_url: str = "https://82b99a6b-4da3-4667-8ee7-da4a29343edd.us-east4-0.gcp.cloud.qdrant.io:6333"
+    qdrant_api_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.jVTnHsG3TKG7oyF-SlaxOo37KYo5ADfXJeRkxATHCEs"
+    qdrant_collection: str = "AI-Fashion"
 
     # Cloudinary
-    cloudinary_cloud_name: str = ""
-    cloudinary_api_key: str = ""
-    cloudinary_api_secret: str = ""
+    cloudinary_cloud_name: str = "dgioqlisq"
+    cloudinary_api_key: str = "566422168138434"
+    cloudinary_api_secret: str = "D4gVtjDJA9nZ0V5lOjAlcTcnIxQ"
 
     # CLIP
     clip_model: str = "ViT-B-32"
