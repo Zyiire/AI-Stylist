@@ -79,8 +79,8 @@ async def lifespan(app: FastAPI):
 
 async def _catalog_refresh_job():
     """
-    Nightly job: refresh Pinterest and eBay fashion content in Qdrant.
-    Runs the ingest scripts as subprocesses so pipeline deps (torch, etc.)
+    Nightly job: refresh Pexels fashion content in Qdrant.
+    Runs the ingest script as a subprocess so pipeline deps (torch, etc.)
     don't need to be installed in the backend environment.
     """
     logger.info("[SCHEDULER] Catalog refresh job started")
@@ -90,8 +90,7 @@ async def _catalog_refresh_job():
         python = Path("python")  # fall back to PATH
 
     scripts = [
-        (PIPELINE_DIR / "ingest_pinterest.py", ["--limit", "100"]),
-        (PIPELINE_DIR / "ingest_ebay.py",      ["--limit", "100"]),
+        (PIPELINE_DIR / "ingest.py", ["--source", "pexels", "--limit", "100"]),
     ]
 
     for script, extra_args in scripts:

@@ -110,7 +110,8 @@ def _upload_to_cloudinary(image_bytes: bytes, product_id: int) -> str:
             resource_type="image",
         )
         return result["secure_url"]
-    except Exception:
+    except Exception as exc:
+        logger.warning("Cloudinary upload failed for product %d: %s", product_id, exc)
         return f"https://placeholder.fashion/community/{product_id}.jpg"
 
 
@@ -248,7 +249,12 @@ async def get_feed(
 ):
     """Return a paginated listing of catalog items for the community feed."""
     items, next_offset = qdrant_service.scroll_products(limit=limit, offset_id=offset)
-    valid = [item for item in items if item.get("image_url") and item.get("name")]
+    valid = [
+        item for item in items
+        if item.get("image_url")
+        and "placeholder.fashion" not in item.get("image_url", "")
+        and item.get("name")
+    ]
     return FeedResponse(
         items=[ProductResult(**{**item, "score": 0.0}) for item in valid],
         total=len(valid),
