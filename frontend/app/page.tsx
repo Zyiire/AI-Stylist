@@ -10,7 +10,6 @@ import { FilterSidebar } from "@/components/FilterSidebar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { useDropzone } from "react-dropzone";
-import { Loader2 } from "lucide-react";
 
 export interface Product {
   product_id: number;
@@ -49,9 +48,7 @@ export default function HomePage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [queryId]                       = useState(() => Math.random().toString(36).slice(2));
 
-  const handleTabChange = useCallback((tab: ActiveTab) => {
-    setActiveTab(tab);
-  }, []);
+  const handleTabChange = useCallback((tab: ActiveTab) => setActiveTab(tab), []);
 
   const handleImageSearch = useCallback(async (file: File) => {
     setLoading(true); setError(null); setHasSearched(true);
@@ -68,8 +65,7 @@ export default function HomePage() {
     try {
       const res = await fetch(`${API_URL}/search/image?${params}`, { method: "POST", body: form });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail ?? `Error ${res.status}`);
-      const data = await res.json();
-      setResults(data.results);
+      setResults((await res.json()).results);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setResults([]);
@@ -86,8 +82,7 @@ export default function HomePage() {
         body: JSON.stringify({ query, top_k: 24, filters }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail ?? `Error ${res.status}`);
-      const data = await res.json();
-      setResults(data.results);
+      setResults((await res.json()).results);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setResults([]);
@@ -103,7 +98,7 @@ export default function HomePage() {
   }, [queryId]);
 
   return (
-    <>
+    <div className="bg-cream min-h-screen text-green-deep">
       <Navbar
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -113,52 +108,55 @@ export default function HomePage() {
         loading={loading}
       />
 
-      {/* Feed view */}
+      {/* ── Feed tab ─────────────────────────────── */}
       {activeTab === "feed" && (
-        <FeedGrid onTabChange={(tab) => setActiveTab(tab)} />
+        <FeedGrid
+          onTabChange={(tab) => setActiveTab(tab)}
+          onTextSearch={handleTextSearch}
+          onImageSearch={handleImageSearch}
+          loading={loading}
+        />
       )}
 
-      {/* Discover / search view */}
+      {/* ── Discover / search tab ────────────────── */}
       {activeTab === "discover" && (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-28 pb-16">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-24 pb-20">
 
-          {/* Search bar row */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-8 items-start sm:items-center">
+          {/* Inline search bar */}
+          <div className="mb-8 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <DiscoverSearchBar
               onTextSearch={handleTextSearch}
               onImageSearch={handleImageSearch}
               loading={loading}
             />
             <button
-              className="lg:hidden flex items-center gap-1.5 text-sm text-primary border border-outline-variant/40 px-3 py-2 rounded-xl font-medium hover:bg-surface-container-low transition-colors font-body shrink-0"
+              className="lg:hidden font-mono text-[10px] tracking-[0.18em] text-green-deep border border-warm-border px-4 py-2 hover:bg-cream-dark transition-colors"
               onClick={() => setFiltersOpen(!filtersOpen)}
             >
-              <span className="material-symbols-outlined text-[18px]">filter_list</span>
-              Filters
+              FILTERS
             </button>
           </div>
 
           {!hasSearched ? (
-            /* Empty discover state */
             <div className="flex flex-col items-center justify-center py-32 text-center">
-              <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">search</span>
-              <h2 className="font-headline text-2xl font-bold text-primary mb-2">Discover Styles</h2>
-              <p className="text-on-surface-variant font-body text-sm max-w-xs">
-                Search by text or upload a photo to find visually similar styles from the community.
+              <div className="w-px h-12 bg-green-deep/15 mx-auto mb-8" />
+              <p className="font-display text-5xl text-green-deep mb-3">DISCOVER</p>
+              <p className="font-mono text-[10px] tracking-[0.2em] text-green-muted">
+                SEARCH BY TEXT OR UPLOAD A PHOTO
               </p>
             </div>
           ) : (
-            <div className="flex gap-6">
+            <div className="flex gap-8">
               {/* Desktop filter sidebar */}
-              <aside className="hidden lg:block w-48 shrink-0 sticky top-28 self-start">
+              <aside className="hidden lg:block w-44 shrink-0 sticky top-24 self-start">
                 <FilterSidebar filters={filters} onChange={setFilters} />
               </aside>
 
               {/* Mobile filter drawer */}
               {filtersOpen && (
                 <div className="lg:hidden fixed inset-0 z-40 flex">
-                  <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
-                  <div className="relative ml-auto w-72 h-full bg-surface p-6 overflow-y-auto shadow-2xl">
+                  <div className="absolute inset-0 bg-green-deep/40" onClick={() => setFiltersOpen(false)} />
+                  <div className="relative ml-auto w-72 h-full bg-cream p-6 overflow-y-auto">
                     <FilterSidebar filters={filters} onChange={setFilters} />
                   </div>
                 </div>
@@ -166,7 +164,7 @@ export default function HomePage() {
 
               <main className="flex-1 min-w-0">
                 {error && (
-                  <div className="text-sm text-error bg-error-container rounded-xl px-4 py-3 mb-6 font-body">
+                  <div className="font-mono text-[10px] tracking-wider text-red-800 bg-red-50 border border-red-200 px-4 py-3 mb-6">
                     {error}
                   </div>
                 )}
@@ -183,81 +181,65 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Collections tab */}
+      {/* ── Collections tab ──────────────────────── */}
       {activeTab === "collections" && (
         user ? (
-          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
-            <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">auto_stories</span>
-            <h2 className="font-headline text-2xl font-bold text-primary mb-2">Collections</h2>
-            <p className="text-on-surface-variant font-body text-sm">Coming soon.</p>
-          </div>
+          <EmptyState icon="ARCHIVE" title="COLLECTIONS" sub="Coming soon — save your favourite looks." />
         ) : (
-          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
-            <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">auto_stories</span>
-            <h2 className="font-headline text-2xl font-bold text-primary mb-2">Save your looks</h2>
-            <p className="text-on-surface-variant font-body text-sm max-w-xs mb-8">
-              Sign in to start building your personal fashion archive.
-            </p>
+          <EmptyState icon="ARCHIVE" title="SAVE YOUR LOOKS" sub="Sign in to build your personal fashion archive.">
             <button
               onClick={() => setAuthOpen(true)}
-              className="bg-primary text-on-primary px-8 py-3 rounded-xl text-sm font-bold font-label tracking-widest uppercase hover:bg-primary-container transition-colors"
+              className="mt-6 border border-green-deep rounded-full px-8 py-3 font-mono text-[10px] tracking-[0.2em] text-green-deep hover:bg-green-deep hover:text-cream transition-colors"
             >
-              Sign In
+              SIGN IN
             </button>
-          </div>
+          </EmptyState>
         )
       )}
 
-      {/* Profile tab */}
+      {/* ── Profile tab ──────────────────────────── */}
       {activeTab === "profile" && (
         user ? (
-          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32 gap-6">
-            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
-              <span className="font-headline text-3xl font-extrabold text-on-primary">
+          <div className="min-h-screen flex flex-col items-center justify-center pt-20 pb-32 gap-8">
+            <div className="w-20 h-20 bg-green-deep flex items-center justify-center">
+              <span className="font-display text-4xl text-cream">
                 {user.email?.slice(0, 2).toUpperCase()}
               </span>
             </div>
-            <div>
-              <h2 className="font-headline text-2xl font-bold text-primary">{user.email}</h2>
-              <p className="text-on-surface-variant font-body text-sm mt-1">
-                Member since{" "}
-                {new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            <div className="text-center">
+              <p className="font-mono text-xs tracking-[0.2em] text-green-deep">{user.email}</p>
+              <p className="font-mono text-[9px] tracking-widest text-green-muted mt-1">
+                MEMBER SINCE{" "}
+                {new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }).toUpperCase()}
               </p>
             </div>
             <button
               onClick={signOut}
-              className="flex items-center gap-2 text-sm font-bold font-label tracking-widest uppercase text-outline border border-outline-variant/40 px-6 py-3 rounded-xl hover:border-primary/40 hover:text-primary transition-colors"
+              className="border border-warm-border px-8 py-3 font-mono text-[10px] tracking-[0.2em] text-green-muted hover:text-green-deep hover:border-green-deep transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
-              Sign Out
+              SIGN OUT
             </button>
           </div>
         ) : (
-          <div className="min-h-screen flex flex-col items-center justify-center text-center pt-16 pb-32">
-            <span className="material-symbols-outlined text-primary/20 text-7xl mb-6">person</span>
-            <h2 className="font-headline text-2xl font-bold text-primary mb-2">Your Profile</h2>
-            <p className="text-on-surface-variant font-body text-sm max-w-xs mb-8">
-              Sign in to access your personal atelier.
-            </p>
+          <EmptyState icon="PROFILE" title="YOUR PROFILE" sub="Sign in to access your personal atelier.">
             <button
               onClick={() => setAuthOpen(true)}
-              className="bg-primary text-on-primary px-8 py-3 rounded-xl text-sm font-bold font-label tracking-widest uppercase hover:bg-primary-container transition-colors"
+              className="mt-6 border border-green-deep rounded-full px-8 py-3 font-mono text-[10px] tracking-[0.2em] text-green-deep hover:bg-green-deep hover:text-cream transition-colors"
             >
-              Sign In
+              SIGN IN
             </button>
-          </div>
+          </EmptyState>
         )
       )}
 
       <Footer />
       <PublishModal isOpen={publishOpen} onClose={() => setPublishOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
-    </>
+    </div>
   );
 }
 
-/* ── Inline discover search bar ───────────────────────────────── */
-
+/* ── Discover inline search bar ──────────────────── */
 function DiscoverSearchBar({
   onTextSearch,
   onImageSearch,
@@ -287,43 +269,73 @@ function DiscoverSearchBar({
   };
 
   return (
-    <div className="flex gap-2 flex-1 max-w-xl items-center">
-      {/* Text search */}
-      <form onSubmit={submit} className="relative flex-1">
-        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search styles, textures, silhouettes…"
-          disabled={loading}
-          className="w-full pl-11 pr-10 py-3 bg-surface-container-lowest border-0 ring-1 ring-outline-variant/30 rounded-xl text-on-surface placeholder:text-outline/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all font-body disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={!q.trim() || loading}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-primary disabled:opacity-30"
-        >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
-        </button>
+    <div className="flex gap-3 flex-1 max-w-2xl items-center" {...getRootProps()}>
+      <input {...getInputProps()} />
+      <form onSubmit={submit} className="flex-1">
+        <div className="flex items-center gap-3 border-b border-green-deep pb-2">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search styles, textures, silhouettes…"
+            disabled={loading}
+            className="flex-1 bg-transparent border-none outline-none ring-0 font-mono text-sm text-green-deep placeholder:text-green-muted/50 disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={!q.trim() || loading}
+            className="font-mono text-[10px] tracking-[0.15em] text-green-deep disabled:opacity-30 shrink-0"
+          >
+            {loading ? "…" : "→"}
+          </button>
+        </div>
       </form>
 
-      {/* Image upload trigger */}
-      <div {...getRootProps()}>
-        <input {...getInputProps()} id="img-upload" />
+      {/* Image upload */}
+      <div>
         <label
-          htmlFor="img-upload"
-          className={`flex items-center gap-2 px-4 py-3 rounded-xl border border-outline-variant/30 cursor-pointer hover:border-primary/40 hover:bg-surface-container-low transition-all font-body text-sm text-on-surface-variant ${loading ? "opacity-50 pointer-events-none" : ""}`}
+          htmlFor="discover-img-upload"
+          className={`flex items-center gap-2 font-mono text-[10px] tracking-[0.15em] text-green-muted hover:text-green-deep cursor-pointer transition-colors ${loading ? "opacity-50 pointer-events-none" : ""}`}
         >
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="query" className="w-5 h-5 object-cover rounded" />
+            <img src={preview} alt="query" className="w-5 h-5 object-cover" />
           ) : (
-            <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+            <span className="material-symbols-outlined text-[18px]">photo_camera</span>
           )}
-          <span className="hidden sm:block">Photo</span>
+          <span className="hidden sm:block">PHOTO</span>
         </label>
+        <input
+          id="discover-img-upload"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) { setPreview(URL.createObjectURL(f)); onImageSearch(f); }
+          }}
+        />
       </div>
     </div>
   );
 }
 
+/* ── Empty state helper ──────────────────────────── */
+function EmptyState({
+  title,
+  sub,
+  children,
+}: {
+  icon?: string;
+  title: string;
+  sub: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-center pt-20 pb-32 px-6">
+      <div className="w-px h-12 bg-green-deep/15 mx-auto mb-8" />
+      <p className="font-display text-5xl text-green-deep mb-3">{title}</p>
+      <p className="font-mono text-[10px] tracking-[0.2em] text-green-muted max-w-xs">{sub}</p>
+      {children}
+    </div>
+  );
+}

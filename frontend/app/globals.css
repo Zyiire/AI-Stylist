@@ -2,7 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Material Symbols ─────────────────────────── */
+/* ── Base ────────────────────────────────────────── */
+html, body {
+  background-color: #F0EBE0;
+  color: #1A2E1E;
+}
+
+/* ── Material Symbols ─────────────────────────────── */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   display: inline-block;
@@ -10,47 +16,66 @@
   vertical-align: middle;
 }
 
-/* ── Masonry ─────────────────────────────────── */
+/* ── Editorial 3-column product grid ─────────────── */
+.editorial-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+@media (min-width: 768px)  { .editorial-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* ── Legacy masonry (kept for fallback) ──────────── */
 .masonry {
   columns: 2;
-  column-gap: 12px;
+  column-gap: 0;
 }
 @media (min-width: 640px)  { .masonry { columns: 3; } }
-@media (min-width: 1024px) { .masonry { columns: 4; } }
-@media (min-width: 1280px) { .masonry { columns: 5; } }
+@media (min-width: 1024px) { .masonry { columns: 3; } }
 
 .masonry-item {
   break-inside: avoid;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   display: inline-block;
   width: 100%;
 }
 
-/* ── Pin card hover ──────────────────────────── */
+/* ── Image desaturation ───────────────────────────── */
+.img-muted {
+  filter: saturate(0.5) contrast(1.06);
+  transition: filter 0.5s ease;
+}
+.img-muted:hover {
+  filter: saturate(0.75) contrast(1.04);
+}
+
+/* ── Product card ─────────────────────────────────── */
+.product-card { position: relative; }
+.product-card .card-overlay  { opacity: 0; transition: opacity 0.25s ease; }
+.product-card:hover .card-overlay  { opacity: 1; }
+.product-card .card-actions   { opacity: 0; transition: opacity 0.25s ease; }
+.product-card:hover .card-actions  { opacity: 1; }
+
+/* ── Pin card hover (legacy) ──────────────────────── */
 .pin-card .pin-save    { opacity: 0; transition: opacity 0.2s ease; }
 .pin-card:hover .pin-save { opacity: 1; }
 .pin-card .pin-overlay { opacity: 0; transition: opacity 0.2s ease; }
 .pin-card:hover .pin-overlay { opacity: 1; }
 
-/* ── Underline link effect ───────────────────── */
-.hover-underline {
-  position: relative;
-}
+/* ── Underline link ───────────────────────────────── */
+.hover-underline { position: relative; }
 .hover-underline::after {
   content: "";
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 1px;
+  bottom: -2px; left: 0;
+  width: 0; height: 1px;
   background: currentColor;
   transition: width 0.25s ease;
 }
 .hover-underline:hover::after { width: 100%; }
 
-/* ── Skeleton shimmer ────────────────────────── */
+/* ── Skeleton shimmer (cream-toned) ──────────────── */
 .skeleton {
-  background: linear-gradient(90deg, #eae7e7 25%, #e0dddd 50%, #eae7e7 75%);
+  background: linear-gradient(90deg, #E5DDD1 25%, #DDD5C8 50%, #E5DDD1 75%);
   background-size: 400px 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -60,18 +85,18 @@
   100% { background-position:  400px 0; }
 }
 
-/* ── Focus ring ──────────────────────────────── */
+/* ── Focus ring ───────────────────────────────────── */
 input:focus, textarea:focus, select:focus {
-  outline: 2px solid rgba(0, 52, 43, 0.3);
+  outline: 1px solid rgba(26, 46, 30, 0.25);
   outline-offset: 0;
 }
 
-/* ── Scrollbar ───────────────────────────────── */
-::-webkit-scrollbar { width: 4px; }
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #bfc9c4; }
+::-webkit-scrollbar-thumb { background: #A8BCA8; }
 
-/* ── Modal ───────────────────────────────────── */
+/* ── Modal ────────────────────────────────────────── */
 .modal-backdrop { animation: fadeIn 0.2s ease both; }
 .modal-card     { animation: slideUp 0.25s ease both; }
 
@@ -83,13 +108,47 @@ input:focus, textarea:focus, select:focus {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Glass nav ───────────────────────────────── */
+/* ── Glass nav ────────────────────────────────────── */
 .glass-nav {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* ── Editorial shadow ────────────────────────── */
+/* ── System status bar ────────────────────────────── */
+.system-bar {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 1.5rem;
+  z-index: 30;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1.6;
+}
+
+/* ── Editorial shadow ─────────────────────────────── */
 .editorial-shadow {
-  box-shadow: 0 20px 40px rgba(28, 27, 27, 0.06);
+  box-shadow: 0 20px 40px rgba(26, 46, 30, 0.06);
+}
+
+/* ── Sticker badge ────────────────────────────────── */
+.sticker {
+  position: absolute;
+  top: 14px; right: 0;
+  font-family: "Space Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  pointer-events: none;
+}
+.sticker-dark {
+  background: #1A2E1E;
+  color: #F0EBE0;
+  transform: rotate(-1.5deg);
+}
+.sticker-light {
+  background: #F0EBE0;
+  color: #1A2E1E;
+  border: 1px solid #1A2E1E;
+  transform: rotate(1deg);
 }
