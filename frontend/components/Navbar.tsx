@@ -31,32 +31,32 @@ export function Navbar({
 
   return (
     <>
-      {/* ── Top nav bar ─────────────────────────────── */}
+      {/* ── Top nav bar ── single compact row──────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-cream border-b border-warm-border/60">
-        <div className="flex items-start justify-between px-5 py-3 max-w-[1600px] mx-auto">
+        <div className="flex items-center justify-between px-5 ph-14 max-w-[1600px] mx-auto">
 
           {/* Logo */}
           <button
             onClick={() => onTabChange("feed")}
-            className="flex flex-col items-start leading-none"
+            className="flex items-baseline gap-2 leading-none"
           >
-            <span className="font-display text-4xl text-green-deep tracking-tight leading-none">
+            <span className="font-display text-2xl text-green-deep tracking-tight leading-none">
               Mira.
             </span>
-            <span className="font-mono text-[8px] text-green-muted tracking-[0.2em] mt-0.5">
+            <span className="hidden sm:inline font-mono text-[10px] text-green-muted tracking-[0.2em]">
               SEARCH ENGINE
             </span>
           </button>
 
-          {/* Desktop: stacked nav links */}
-          <div className="hidden md:flex flex-col items-end gap-[3px] mt-1">
+          {/* Desktop: horizontal nav links */}                                                                                                                
+          <div className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map(({ tab, label }) => (
               <button
                 key={tab}
                 onClick={() => onTabChange(tab)}
                 className={`font-mono text-[11px] tracking-[0.18em] transition-colors ${
                   activeTab === tab
-                    ? "text-green-deep"
+                    ? "text-green-deep border-b border-green-deep pb-px" 
                     : "text-green-muted hover:text-green-deep"
                 }`}
               >
@@ -66,14 +66,14 @@ export function Navbar({
             {user ? (
               <button
                 onClick={onUpload}
-                className="font-mono text-[11px] tracking-[0.18em] text-green-deep mt-1 border-b border-green-deep pb-px hover:text-green-mid transition-colors"
+                 className="font-mono text-[11px] tracking-[0.18em] text-cream bg-green-deep px-4 py-1.5 hover:bg-green-mid transition-colors"
               >
                 UPLOAD +
               </button>
             ) : (
               <button
                 onClick={onAuthOpen}
-                className="font-mono text-[11px] tracking-[0.18em] text-green-deep mt-1 border-b border-green-deep pb-px hover:text-green-mid transition-colors"
+                className="font-mono text-[11px] tracking-[0.18em] text-cream bg-green-deep px-4 py-1.5 hover:bg-green-mid transition-colors"
               >
                 SIGN IN
               </button>
@@ -82,7 +82,7 @@ export function Navbar({
 
           {/* Mobile: hamburger */}
           <button
-            className="md:hidden font-mono text-[11px] tracking-widest text-green-deep mt-1"
+            className="md:hidden font-mono text-[11px] tracking-widest text-green-deep"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? "CLOSE" : "MENU"}
