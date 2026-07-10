@@ -36,7 +36,7 @@
 - **Machine Learning Model**: OpenAI CLIP (ViT-B/32) via `open-clip-torch`
 - **Vector Database**: Qdrant Cloud (HNSW indexing)
 - **Image Hosting**: Cloudinary
-- **Original Dataset**: `ashraq/fashion-product-images-small` (Hugging Face)
+- **Original Dataset**: `benitomartin/fashion-product-images-small-900x1200` (Hugging Face — same 44k catalog as `ashraq/fashion-product-images-small`, at 900×1200 resolution)
 - **Deployment Strategy**: Railway / Docker
 
 ---
@@ -105,8 +105,12 @@ pip install -r requirements.txt
 # Option A: Quick Test (500 items, bypass Cloudinary uploads)
 python ingest.py --limit 500 --skip-cloudinary
 
-# Option B: Full Ingestion (44k+ items - takes time depending on CPU)
+# Option B: Full Ingestion (44k+ items at 900x1200 - takes time depending on CPU)
 python ingest.py
+
+# Re-ingesting after a dataset upgrade? Purge the old catalog entries first
+# (leaves community uploads untouched):
+python ingest.py --purge-source hf
 ```
 
 ### 4. Running the Backend
@@ -156,8 +160,19 @@ The backend exposes several critical endpoints for the search experience:
 1. Push your repository to GitHub.
 2. Link the repository to [Railway](https://railway.app/).
 3. Set the Root Directory to `/backend`. Railway will automatically build using the included `Dockerfile`.
-4. Inject your environment variables (`QDRANT_URL`, etc.) in the Railway Dashboard.
-5. Generate a public domain URL.
+4. Inject the environment variables in the Railway Dashboard (**Variables** tab) — no credentials are hardcoded in the repo:
+
+   | Variable | Value |
+   |----------|-------|
+   | `QDRANT_URL` | Qdrant Cloud cluster URL (include `:6333`) |
+   | `QDRANT_API_KEY` | Qdrant API key |
+   | `QDRANT_COLLECTION` | `Mira` |
+   | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+   | `CLOUDINARY_API_KEY` | Cloudinary API key |
+   | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+   | `ALLOWED_ORIGINS` | Frontend origin, e.g. `https://mira-4.vercel.app` |
+
+5. Generate a public domain URL and verify `https://<your-app>.up.railway.app/search/health`.
 
 ### Deploying the Frontend (Vercel)
 1. Import your GitHub repository to [Vercel](https://vercel.com/).

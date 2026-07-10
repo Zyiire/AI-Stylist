@@ -6,8 +6,9 @@ Sources:
   pexels — Pexels photo API (curated fashion queries)
 
 Usage:
-  python ingest.py                                          # default HF dataset, all items
+  python ingest.py                                          # default HF dataset (900x1200), all items
   python ingest.py --limit 500                             # default HF dataset, 500 items
+  python ingest.py --purge-source hf                       # drop old low-res 'hf' points, then re-ingest
   python ingest.py --dataset DBQ/Fashion.Product.Image.Dataset --limit 500
   python ingest.py --dataset keremberke/fashion-product-image-classification --limit 500
   python ingest.py --source pexels --limit 200             # Pexels fashion photos
@@ -58,7 +59,20 @@ PEXELS_API_KEY    = os.getenv("PEXELS_API_KEY", "")
 # ── Available HuggingFace datasets ────────────────────────────────────────────
 # Each entry maps dataset field names → our standard schema fields.
 HF_DATASETS: dict[str, dict] = {
+    # Same 44k products as ashraq/fashion-product-images-small, rebuilt at 900x1200.
+    "benitomartin/fashion-product-images-small-900x1200": {
+        "id":       "id",
+        "name":     "productDisplayName",
+        "brand":    None,
+        "category": "subCategory",
+        "gender":   "gender",
+        "color":    "baseColour",
+        "price":    None,
+        "link":     None,
+        "split":    "train",
+    },
     "ashraq/fashion-product-images-small": {
+        "id":       "id",
         "name":     "productDisplayName",
         "brand":    "brand",
         "category": "subCategory",
@@ -69,6 +83,7 @@ HF_DATASETS: dict[str, dict] = {
         "split":    "train",
     },
     "DBQ/Fashion.Product.Image.Dataset": {
+        "id":       None,
         "name":     "name",
         "brand":    "brand",
         "category": "Category",
@@ -79,6 +94,7 @@ HF_DATASETS: dict[str, dict] = {
         "split":    "train",
     },
     "keremberke/fashion-product-image-classification": {
+        "id":       None,
         "name":     "label",
         "brand":    None,
         "category": "label",
@@ -89,7 +105,7 @@ HF_DATASETS: dict[str, dict] = {
         "split":    "train",
     },
 }
-DEFAULT_HF_DATASET = "ashraq/fashion-product-images-small"
+DEFAULT_HF_DATASET = "benitomartin/fashion-product-images-small-900x1200"
 
 # Pexels search queries — combined results build a diverse fashion catalog
 PEXELS_QUERIES = [
@@ -127,10 +143,15 @@ def perceptual_hash(image: Image.Image) -> str:
     return str(imagehash.phash(image))
 
 
-def is_duplicate(phash: str, seen: dict[str, int], threshold: int = PHASH_THRESHOLD) -> bool:
+def is_duplicate(phash: str, seen: dict[str, int], threshold: int | None = None) -> bool:
+    t = PHASH_THRESHOLD if threshold is None else threshold
+    if t <= 0:
+        # Exact-match only — right for curated catalogs where visually
+        # similar items are distinct products (e.g. colorways, basics).
+        return phash in seen
     h = imagehash.hex_to_hash(phash)
     for existing_hash in seen:
-        if h - imagehash.hex_to_hash(existing_hash) <= threshold:
+        if h - imagehash.hex_to_hash(existing_hash) <= t:
             return True
     return False
 
@@ -176,6 +197,27 @@ def ensure_collection(client: QdrantClient) -> None:
     ]:
         client.create_payload_index(COLLECTION_NAME, field, field_schema=schema)
     logger.info("Collection created.")
+
+
+def purge_source(client: QdrantClient, source: str) -> None:
+    """Delete all points from a given source (e.g. 'hf') — used to clear
+    stale low-res catalog entries before re-ingesting, without touching
+    community uploads or other sources."""
+    existing = {c.name for c in client.get_collections().collections}
+    if COLLECTION_NAME not in existing:
+        logger.info("Collection '%s' does not exist yet — nothing to purge.", COLLECTION_NAME)
+        return
+    logger.info("Purging all points with source='%s' from '%s'…", source, COLLECTION_NAME)
+    client.delete(
+        collection_name=COLLECTION_NAME,
+        points_selector=qmodels.FilterSelector(
+            filter=qmodels.Filter(
+                must=[qmodels.FieldCondition(key="source", match=qmodels.MatchValue(value=source))]
+            )
+        ),
+        wait=True,
+    )
+    logger.info("Purge complete.")
 
 
 def upsert_batch(client: QdrantClient, batch: list[dict]) -> None:
@@ -246,7 +288,11 @@ def run_hf(dataset_name: str, limit: int | None, skip_cloudinary: bool) -> None:
             pbar.update(1)
             continue
 
-        product_id = abs(hash(f"hf_{dataset_name}_{idx}")) % (2 ** 53)
+        # Deterministic ID: stable across runs so re-ingestion upserts instead
+        # of duplicating. Prefer the dataset's own product id when available.
+        id_field = field_map.get("id")
+        row_key = str(row.get(id_field, idx)) if id_field else str(idx)
+        product_id = int(hashlib.md5(f"hf_{row_key}".encode()).hexdigest()[:12], 16) % (2 ** 53)
         seen_hashes[phash] = product_id
 
         if skip_cloudinary or not CLOUDINARY_CLOUD:
@@ -459,9 +505,24 @@ if __name__ == "__main__":
                         help="Max items to ingest (default: all)")
     parser.add_argument("--skip-cloudinary", action="store_true",
                         help="Skip Cloudinary upload — use source URLs directly")
+    parser.add_argument("--purge-source", metavar="SOURCE", default=None,
+                        help="Delete all existing points with this source (e.g. 'hf') "
+                             "before ingesting — clears stale low-res entries")
+    parser.add_argument("--phash-threshold", type=int, default=None,
+                        help="Perceptual-hash Hamming distance for dedup (default 8). "
+                             "0 = exact-match only; use for curated catalogs where "
+                             "similar-looking items are distinct products")
     args = parser.parse_args()
 
+    if args.phash_threshold is not None:
+        PHASH_THRESHOLD = args.phash_threshold
+        logger.info("Dedup phash threshold set to %d", PHASH_THRESHOLD)
+
     start = time.perf_counter()
+
+    if args.purge_source:
+        purge_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY, timeout=60)
+        purge_source(purge_client, args.purge_source)
 
     if args.source == "pexels":
         run_pexels(limit=args.limit, skip_cloudinary=args.skip_cloudinary)

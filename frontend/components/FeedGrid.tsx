@@ -168,9 +168,9 @@ export function FeedGrid({ onTabChange, onTextSearch, onImageSearch, loading }: 
       {/* ── Product grid ─────────────────────────── */}
       <section>
         {fetching ? (
-          <div className="editorial-grid">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <SkeletonCard key={i} />
+          <div className="masonry">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} idx={i} />
             ))}
           </div>
         ) : error ? (
@@ -184,7 +184,7 @@ export function FeedGrid({ onTabChange, onTextSearch, onImageSearch, loading }: 
             </p>
           </div>
         ) : (
-          <div className="editorial-grid">
+          <div className="masonry">
             {items.map((item, idx) => (
               <ProductCard key={item.product_id} item={item} idx={idx} />
             ))}
@@ -215,6 +215,15 @@ export function FeedGrid({ onTabChange, onTextSearch, onImageSearch, loading }: 
   );
 }
 
+/* ── Mood-board aspect cycle ──────────────────────── */
+/* Deterministic variation gives the masonry its Pinterest rhythm
+   while keeping next/image `fill` working. */
+const ASPECTS = [
+  "aspect-[3/4]", "aspect-square", "aspect-[4/5]", "aspect-[2/3]",
+  "aspect-[4/5]", "aspect-[3/4]", "aspect-[2/3]", "aspect-square",
+];
+const aspectFor = (idx: number) => ASPECTS[idx % ASPECTS.length];
+
 /* ── Product card ─────────────────────────────────── */
 function ProductCard({ item, idx }: { item: Product; idx: number }) {
   const num      = String(idx + 1).padStart(3, "0");
@@ -222,36 +231,21 @@ function ProductCard({ item, idx }: { item: Product; idx: number }) {
   const isLimited = idx % 11 === 3;
 
   return (
-    <div className="product-card group cursor-pointer border-b border-r border-warm-border/40">
+    <div className="masonry-item product-card group cursor-pointer bg-cream">
       {/* Image */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-cream-dark">
+      <div className={`relative ${aspectFor(idx)} overflow-hidden bg-cream-dark`}>
         <Image
           src={optimizeImage(item.image_url)}
           alt={item.name}
           fill
           quality={85}
-          sizes="(max-width: 768px) 50vw, 33vw"
-          className="object-cover img-muted group-hover:scale-[1.025] transition-transform duration-700"
+          sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+          className="object-cover img-muted group-hover:scale-[1.02] transition-transform duration-700"
           onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
         />
 
-        {/* Arc decoration */}
-        <svg
-          viewBox="0 0 100 133"
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          preserveAspectRatio="none"
-        >
-          <ellipse
-            cx="50" cy="105"
-            rx="40" ry="28"
-            fill="none"
-            stroke="rgba(240,235,224,0.35)"
-            strokeWidth="0.4"
-          />
-        </svg>
-
         {/* Card overlay on hover */}
-        <div className="card-overlay absolute inset-0 bg-green-deep/10" />
+        <div className="card-overlay absolute inset-0 bg-green-deep/5" />
 
         {/* Stickers */}
         {isNew && (
@@ -263,7 +257,7 @@ function ProductCard({ item, idx }: { item: Product; idx: number }) {
       </div>
 
       {/* Label row */}
-      <div className="px-3 py-2.5">
+      <div className="px-3 py-2.5 border-b border-warm-border/60">
         <div className="flex justify-between items-baseline gap-2">
           <span className="font-mono text-[10px] text-green-deep tracking-wide truncate">
             {num} // {item.name.toUpperCase().slice(0, 28)}
@@ -285,11 +279,11 @@ function ProductCard({ item, idx }: { item: Product; idx: number }) {
 }
 
 /* ── Skeleton card ────────────────────────────────── */
-function SkeletonCard() {
+function SkeletonCard({ idx }: { idx: number }) {
   return (
-    <div className="border-b border-r border-warm-border/40">
-      <div className="aspect-[3/4] skeleton" />
-      <div className="px-3 py-2.5 space-y-1.5">
+    <div className="masonry-item">
+      <div className={`${aspectFor(idx)} skeleton`} />
+      <div className="px-3 py-2.5 space-y-1.5 border-b border-warm-border/60">
         <div className="h-2.5 skeleton w-4/5" />
         <div className="h-2 skeleton w-1/3" />
       </div>

@@ -4,8 +4,20 @@
 
 /* ── Base ────────────────────────────────────────── */
 html, body {
-  background-color: #F0EBE0;
-  color: #1A2E1E;
+  background-color: #FFFFFF;
+  color: #0A0A0A;
+}
+
+/* Acid text selection — the one shot of colour in the system */
+::selection {
+  background: #DFFF00;
+  color: #0A0A0A;
+}
+
+/* Display type: Helvetica pushed heavy + tight (SSENSE logotype energy) */
+.font-display {
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 /* ── Material Symbols ─────────────────────────────── */
@@ -16,7 +28,24 @@ html, body {
   vertical-align: middle;
 }
 
-/* ── Editorial 3-column product grid ─────────────── */
+/* ── Mood-board masonry grid ──────────────────────── */
+/* Variable-height columns with hairline gutters — Pinterest structure,
+   SSENSE severity. */
+.masonry {
+  columns: 2;
+  column-gap: 1px;
+}
+@media (min-width: 640px)  { .masonry { columns: 3; } }
+@media (min-width: 1280px) { .masonry { columns: 4; } }
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 1px;
+  display: inline-block;
+  width: 100%;
+}
+
+/* ── Legacy uniform grid (kept for fallback) ─────── */
 .editorial-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -24,28 +53,14 @@ html, body {
 }
 @media (min-width: 768px)  { .editorial-grid { grid-template-columns: repeat(3, 1fr); } }
 
-/* ── Legacy masonry (kept for fallback) ──────────── */
-.masonry {
-  columns: 2;
-  column-gap: 0;
-}
-@media (min-width: 640px)  { .masonry { columns: 3; } }
-@media (min-width: 1024px) { .masonry { columns: 3; } }
-
-.masonry-item {
-  break-inside: avoid;
-  margin-bottom: 0;
-  display: inline-block;
-  width: 100%;
-}
-
-/* ── Image desaturation ───────────────────────────── */
+/* ── Image treatment ──────────────────────────────── */
+/* Slight desaturation unifies mixed catalog photography into one board */
 .img-muted {
-  filter: saturate(0.5) contrast(1.06);
+  filter: saturate(0.85) contrast(1.03);
   transition: filter 0.5s ease;
 }
 .img-muted:hover {
-  filter: saturate(0.75) contrast(1.04);
+  filter: saturate(1) contrast(1);
 }
 
 /* ── Product card ─────────────────────────────────── */
@@ -73,9 +88,9 @@ html, body {
 }
 .hover-underline:hover::after { width: 100%; }
 
-/* ── Skeleton shimmer (cream-toned) ──────────────── */
+/* ── Skeleton shimmer ─────────────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, #E5DDD1 25%, #DDD5C8 50%, #E5DDD1 75%);
+  background: linear-gradient(90deg, #F5F5F5 25%, #EBEBEB 50%, #F5F5F5 75%);
   background-size: 400px 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -87,14 +102,14 @@ html, body {
 
 /* ── Focus ring ───────────────────────────────────── */
 input:focus, textarea:focus, select:focus {
-  outline: 1px solid rgba(26, 46, 30, 0.25);
+  outline: 1px solid rgba(10, 10, 10, 0.3);
   outline-offset: 0;
 }
 
 /* ── Scrollbar ────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #A8BCA8; }
+::-webkit-scrollbar-thumb { background: #C9C9C9; }
 
 /* ── Modal ────────────────────────────────────────── */
 .modal-backdrop { animation: fadeIn 0.2s ease both; }
@@ -127,7 +142,7 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Editorial shadow ─────────────────────────────── */
 .editorial-shadow {
-  box-shadow: 0 20px 40px rgba(26, 46, 30, 0.06);
+  box-shadow: 0 20px 40px rgba(10, 10, 10, 0.05);
 }
 
 /* ── Sticker badge ────────────────────────────────── */
@@ -142,13 +157,13 @@ input:focus, textarea:focus, select:focus {
   pointer-events: none;
 }
 .sticker-dark {
-  background: #1A2E1E;
-  color: #F0EBE0;
+  background: #0A0A0A;
+  color: #FFFFFF;
   transform: rotate(-1.5deg);
 }
 .sticker-light {
-  background: #F0EBE0;
-  color: #1A2E1E;
-  border: 1px solid #1A2E1E;
+  background: #FFFFFF;
+  color: #0A0A0A;
+  border: 1px solid #0A0A0A;
   transform: rotate(1deg);
 }

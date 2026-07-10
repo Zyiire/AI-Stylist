@@ -149,9 +149,9 @@ def search(
 
     qdrant_filter = _build_filter(filters) if filters else None
 
-    results = client.search(
+    results = client.query_points(
         collection_name=settings.qdrant_collection,
-        query_vector=query_vector,
+        query=query_vector,
         limit=top_k,
         query_filter=qdrant_filter,
         score_threshold=score_threshold or settings.score_threshold,
@@ -164,7 +164,7 @@ def search(
 
     return [
         {**hit.payload, "score": round(hit.score, 4)}
-        for hit in results
+        for hit in results.points
     ]
 
 
